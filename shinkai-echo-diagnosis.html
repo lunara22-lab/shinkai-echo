@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>深海への入り口チェック | LunaRa Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+<style>
+
+/* ══════════════════════════════════════
+   RESET & BASE
+══════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; -webkit-text-size-adjust: 100%; }
+
+:root {
+  --serif:        'Noto Serif JP', Georgia, serif;
+  --display:      'Cormorant Garamond', Georgia, serif;
+  --crystal:      #5BC8E8;
+  --crystal-dim:  rgba(91,200,232,0.3);
+  --white:        #E8F2FF;
+  --white-dim:    rgba(220,236,252,0.68);
+  --white-mute:   rgba(200,220,248,0.38);
+}
+
+body {
+  font-family: var(--serif);
+  color: var(--white);
+  min-height: 100vh;
+  overflow-x: hidden;
+  background: #0A1E3D;
+}
+
+#bg-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100%; height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ══════════════════════════════════════
+   LAYOUT
+══════════════════════════════════════ */
+.brand-bar {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding: 36px 0 0;
+  position: relative;
+  z-index: 2;
+}
+.brand-name {
+  font-family: var(--display);
+  font-size: 0.65rem;
+  letter-spacing: 0.55em;
+  color: rgba(180,220,255,0.6);
+}
+
+.progress-wrap {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 22px 24px 0;
+  position: relative;
+  z-index: 2;
+}
+.progress-track {
+  width: 100%;
+  height: 1px;
+  background: rgba(91,200,232,0.12);
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(to right, rgba(91,200,232,0.25), var(--crystal));
+  transition: width 0.5s ease;
+  width: 0%;
+}
+.progress-label {
+  font-family: var(--display);
+  font-size: 0.58rem;
+  letter-spacing: 0.4em;
+  color: var(--white-mute);
+  margin-top: 7px;
+  display: block;
+  text-align: right;
+}
+
+/* ── スクリーン全体のラッパー ── */
+#app {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 0 72px;
+  /* activeな画面だけ通常フローに乗る */
+}
+
+.screen {
+  display: block;
+  width: 100%;
+  max-width: 480px;
+  padding: 0 24px;
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+  will-change: opacity, transform;
+}
+.screen.active {
+  position: relative;
+}
+
+/* ══════════════════════════════════════
+   INTRO
+══════════════════════════════════════ */
+.intro-eyebrow {
+  font-family: var(--display);
+  font-size: 0.62rem;
+  letter-spacing: 0.45em;
+  color: var(--crystal-dim);
+  display: block;
+  margin-bottom: 22px;
+  margin-top: 44px;
+}
+.intro-title {
+  font-size: clamp(1.45rem, 5vw, 1.85rem);
+  font-weight: 300;
+  line-height: 1.55;
+  letter-spacing: 0.1em;
+  color: var(--white);
+  margin-bottom: 8px;
+}
+.intro-subtitle {
+  font-family: var(--display);
+  font-style: italic;
+  font-size: 0.86rem;
+  color: var(--white-mute);
+  letter-spacing: 0.1em;
+  margin-bottom: 44px;
+}
+.intro-body {
+  font-size: 0.9rem;
+  line-height: 2.1;
+  color: var(--white-dim);
+  margin-bottom: 18px;
+}
+.intro-note {
+  font-family: var(--display);
+  font-style: italic;
+  font-size: 0.82rem;
+  color: var(--white-mute);
+  letter-spacing: 0.08em;
+  margin-top: 28px;
+  margin-bottom: 48px;
+  line-height: 1.95;
+}
+.wave-deco { width: 100%; height: 44px; margin: 18px 0 28px; overflow: hidden; }
+.wave-deco svg { width: 100%; height: 100%; }
+
+/* ══════════════════════════════════════
+   QUESTION
+══════════════════════════════════════ */
+.q-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 28px;
+  margin-bottom: 32px;
+  min-height: 24px;
+}
+.back-btn {
+  font-family: var(--display);
+  font-style: italic;
+  font-size: 0.72rem;
+  letter-spacing: 0.15em;
+  color: var(--white-mute);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 0;
+  transition: color 0.3s;
+  -webkit-tap-highlight-color: transparent;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.back-btn:hover { color: rgba(200,220,248,0.65); }
+.back-btn.hidden { visibility: hidden; pointer-events: none; }
+.back-arrow {
+  display: inline-block;
+  width: 16px;
+  height: 1px;
+  background: currentColor;
+  position: relative;
+  vertical-align: middle;
+  margin-top: -1px;
+}
+.back-arrow::before {
+  content: '';
+  position: absolute;
+  left: 0; top: -3px;
+  width: 6px; height: 6px;
+  border-left: 1px solid currentColor;
+  border-bottom: 1px solid currentColor;
+  transform: rotate(45deg);
+}
+
+.q-number {
+  font-family: var(--display);
+  font-size: 2.6rem;
+  font-weight: 300;
+  color: rgba(91,200,232,0.16);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  margin-bottom: 18px;
+}
+
+/* 質問文：改行を<br>タグで制御 */
+.q-text {
+  font-size: 0.95rem;
+  line-height: 2.05;
+  color: var(--white-dim);
+  margin-bottom: 40px;
+  letter-spacing: 0.04em;
+}
+.q-text .q-pause {
+  display: block;
+  height: 0.6em; /* ブロック間の間隔 */
+}
+
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 36px;
+}
+.option-btn {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 17px 20px;
+  border: 1px solid rgba(91,200,232,0.16);
+  background: transparent;
+  color: var(--white-dim);
+  font-family: var(--serif);
+  font-size: 0.9rem;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.3s, color 0.3s, background 0.3s;
+  -webkit-tap-highlight-color: transparent;
+  width: 100%;
+}
+.option-btn:hover,
+.option-btn.selected {
+  border-color: rgba(91,200,232,0.52);
+  color: var(--white);
+  background: rgba(91,200,232,0.04);
+}
+.option-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  border: 1px solid rgba(91,200,232,0.35);
+  flex-shrink: 0;
+  transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
+}
+.option-btn.selected .option-dot {
+  background: var(--crystal);
+  border-color: var(--crystal);
+  box-shadow: 0 0 8px rgba(91,200,232,0.5);
+}
+
+.next-btn {
+  display: block;
+  width: 100%;
+  padding: 17px 24px;
+  border: 1px solid rgba(91,200,232,0.28);
+  background: transparent;
+  color: var(--white-dim);
+  font-family: var(--serif);
+  font-size: 0.88rem;
+  letter-spacing: 0.22em;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.35s, color 0.35s, background 0.35s;
+  -webkit-tap-highlight-color: transparent;
+}
+.next-btn:disabled {
+  opacity: 0.28;
+  cursor: default;
+  pointer-events: none;
+}
+.next-btn:not(:disabled):hover {
+  border-color: rgba(91,200,232,0.58);
+  color: var(--white);
+  background: rgba(91,200,232,0.04);
+}
+
+/* ══════════════════════════════════════
+   RESULT
+══════════════════════════════════════ */
+.result-orb {
+  width: 50px; height: 50px;
+  margin: 44px auto 38px;
+  position: relative;
+}
+.result-orb::before, .result-orb::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--crystal) 0%, rgba(91,200,232,0.06) 70%);
+  animation: orb-pulse 3.2s ease-in-out infinite;
+}
+.result-orb::after { animation-delay: 1.6s; }
+@keyframes orb-pulse {
+  0%,100% { transform: scale(0.5); opacity: 0.75; }
+  50%      { transform: scale(1.1); opacity: 0.1; }
+}
+
+.result-label {
+  font-family: var(--display);
+  font-size: 0.6rem;
+  letter-spacing: 0.5em;
+  color: var(--crystal-dim);
+  text-align: center;
+  display: block;
+  margin-bottom: 13px;
+}
+.result-type {
+  font-size: clamp(1.3rem, 4.5vw, 1.65rem);
+  font-weight: 300;
+  line-height: 1.55;
+  letter-spacing: 0.1em;
+  color: var(--white);
+  text-align: center;
+  margin-bottom: 36px;
+}
+.result-rule {
+  width: 30px; height: 1px;
+  background: rgba(91,200,232,0.28);
+  margin: 0 auto 34px;
+}
+.result-body {
+  font-size: 0.9rem;
+  line-height: 2.1;
+  color: var(--white-dim);
+  margin-bottom: 18px;
+}
+.result-strength {
+  border-left: 1px solid rgba(91,200,232,0.25);
+  padding: 16px 20px;
+  margin: 28px 0;
+  background: rgba(91,200,232,0.03);
+  font-size: 0.87rem;
+  color: var(--white-dim);
+  line-height: 2;
+}
+.result-strength strong {
+  display: block;
+  font-family: var(--display);
+  font-size: 0.58rem;
+  letter-spacing: 0.42em;
+  color: rgba(91,200,232,0.48);
+  margin-bottom: 8px;
+  font-weight: 300;
+}
+
+/* ══════════════════════════════════════
+   AFTERGLOW
+══════════════════════════════════════ */
+.afterglow-divider {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(91,200,232,0.14), transparent);
+  margin: 44px 0;
+}
+.afterglow-lead {
+  font-size: 1rem;
+  line-height: 2.1;
+  color: var(--white);
+  margin-bottom: 20px;
+  font-weight: 300;
+}
+.afterglow-body {
+  font-size: 0.9rem;
+  line-height: 2.1;
+  color: var(--white-dim);
+  margin-bottom: 18px;
+}
+.afterglow-poem {
+  border-left: 1px solid rgba(91,200,232,0.22);
+  padding: 18px 22px;
+  margin: 32px 0;
+  font-size: 0.92rem;
+  line-height: 2.1;
+  color: rgba(220,238,255,0.82);
+  background: rgba(91,200,232,0.025);
+  font-weight: 300;
+}
+.afterglow-small {
+  font-family: var(--display);
+  font-style: italic;
+  font-size: 0.82rem;
+  color: var(--white-mute);
+  line-height: 1.95;
+  margin-bottom: 18px;
+  letter-spacing: 0.06em;
+}
+
+/* CTA */
+.cta-block {
+  margin-top: 48px;
+  padding: 44px 26px;
+  border: 1px solid rgba(91,200,232,0.14);
+  background: rgba(1,8,18,0.4);
+  text-align: center;
+  position: relative;
+}
+.cta-block::before {
+  content: '';
+  position: absolute;
+  top: -1px; left: 50%;
+  transform: translateX(-50%);
+  width: 40px; height: 1px;
+  background: rgba(91,200,232,0.42);
+}
+.cta-eyebrow {
+  font-family: var(--display);
+  font-size: 0.58rem;
+  letter-spacing: 0.5em;
+  color: rgba(91,200,232,0.48);
+  display: block;
+  margin-bottom: 16px;
+}
+.cta-title {
+  font-size: 1.08rem;
+  font-weight: 300;
+  letter-spacing: 0.1em;
+  color: var(--white);
+  margin-bottom: 18px;
+  line-height: 1.7;
+}
+.cta-body {
+  font-size: 0.84rem;
+  color: var(--white-dim);
+  line-height: 2;
+  margin-bottom: 30px;
+}
+.cta-btn {
+  display: block;
+  width: 100%;
+  padding: 17px 18px;
+  border: 1px solid rgba(91,200,232,0.38);
+  background: transparent;
+  color: var(--white);
+  font-family: var(--serif);
+  font-size: 0.85rem;
+  letter-spacing: 0.18em;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition: border-color 0.35s, background 0.35s, color 0.35s;
+  -webkit-tap-highlight-color: transparent;
+}
+.cta-btn:hover {
+  border-color: var(--crystal);
+  background: rgba(91,200,232,0.05);
+  color: rgba(180,230,248,1);
+}
+
+/* ── Shared buttons ── */
+.start-btn, .retry-btn {
+  display: block;
+  width: 100%;
+  padding: 18px 24px;
+  border: 1px solid rgba(91,200,232,0.32);
+  background: transparent;
+  color: var(--white-dim);
+  font-family: var(--serif);
+  font-size: 0.88rem;
+  letter-spacing: 0.2em;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.35s, color 0.35s, background 0.35s;
+  -webkit-tap-highlight-color: transparent;
+}
+.start-btn:hover, .retry-btn:hover {
+  border-color: rgba(91,200,232,0.6);
+  color: var(--white);
+  background: rgba(91,200,232,0.04);
+}
+.retry-btn {
+  font-size: 0.78rem;
+  letter-spacing: 0.25em;
+  border-color: rgba(91,200,232,0.15);
+  color: var(--white-mute);
+  margin-top: 14px;
+  padding: 14px 24px;
+}
+.retry-btn:hover {
+  border-color: rgba(91,200,232,0.35);
+  color: var(--white-dim);
+  background: transparent;
+}
+
+.closing-brand {
+  font-family: var(--display);
+  font-size: 0.56rem;
+  letter-spacing: 0.55em;
+  color: rgba(140,190,220,0.26);
+  text-align: center;
+  margin-top: 52px;
+  padding-bottom: 12px;
+}
+
+/* ── Misc ── */
+.mt-xs { margin-top: 8px; }
+.mt-sm { margin-top: 16px; }
+.mt-md { margin-top: 28px; }
+.mt-lg { margin-top: 44px; }
+.txt-center { text-align: center; }
+
+@media (max-width: 380px) {
+  .q-text { font-size: 0.88rem; }
+  .option-btn { padding: 15px 16px; font-size: 0.86rem; }
+  .intro-title { font-size: 1.35rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  .screen { animation: none; }
+}
+
+</style>
+</head>
+<body>
+
+<canvas id="bg-canvas" aria-hidden="true"></canvas>
+
+<div class="brand-bar"><span class="brand-name">LunaRa Lab</span></div>
+
+<div class="progress-wrap" id="progress-wrap" style="display:none;">
+  <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+  <span class="progress-label" id="progress-label"></span>
+</div>
+
+<div id="app">
+
+  <!-- ══════════════════════ INTRO ══════════════════════ -->
+  <div class="screen active" id="screen-intro">
+    <span class="intro-eyebrow">— 深海への入り口チェック</span>
+    <h1 class="intro-title">波打ち際の貝殻拾い</h1>
+    <p class="intro-subtitle">LunaRa Lab — 感覚診断</p>
+
+    <div class="wave-deco" aria-hidden="true">
+      <svg viewBox="0 0 480 44" preserveAspectRatio="none" fill="none">
+        <path id="intro-wave2" d="" fill="rgba(20,70,130,0.2)"/>
+        <path id="intro-wave1" d="" stroke="rgba(91,180,230,0.35)" stroke-width="1" fill="none"/>
+      </svg>
+    </div>
+
+    <p class="intro-body">正しい答えを探していたはずなのに、<br>気づけばまた同じ場所に戻っている。</p>
+    <p class="intro-body">そんな感覚はありませんか。</p>
+    <p class="intro-body mt-md">このチェックは、<br>あなたを評価するためのものではありません。</p>
+    <p class="intro-body">今、あなたが海のどのあたりにいるのかを<br>静かに見つめるための小さな航海図です。</p>
+    <p class="intro-note">深く考えず、<br>最初に浮かんだ感覚で答えてみてください。</p>
+
+    <button class="start-btn" onclick="startQuiz()">診断をはじめる</button>
+  </div>
+
+
+  <!-- ══════════════════════ QUESTION ══════════════════════ -->
+  <div class="screen" id="screen-question">
+    <div class="q-nav">
+      <button class="back-btn hidden" id="back-btn" onclick="prevQuestion()">
+        <span class="back-arrow"></span>
+        前の質問へ
+      </button>
+    </div>
+    <div class="q-number" id="q-number">01</div>
+    <p class="q-text" id="q-text"></p>
+    <div class="options">
+      <button class="option-btn" id="opt-yes" onclick="selectAnswer(1)">
+        <span class="option-dot"></span><span>はい</span>
+      </button>
+      <button class="option-btn" id="opt-no" onclick="selectAnswer(0)">
+        <span class="option-dot"></span><span>いいえ</span>
+      </button>
+    </div>
+    <button class="next-btn" id="next-btn" onclick="nextQuestion()" disabled>次へ</button>
+  </div>
+
+
+  <!-- ══════════════════════ RESULT ══════════════════════ -->
+  <div class="screen" id="screen-result">
+    <div class="result-orb" aria-hidden="true"></div>
+    <span class="result-label" id="result-range"></span>
+    <h2 class="result-type" id="result-type"></h2>
+    <div class="result-rule"></div>
+    <div id="result-body-wrap"></div>
+    <button class="next-btn mt-lg" onclick="showAfterglow()" style="margin-top:36px;">続きを読む</button>
+    <button class="retry-btn" onclick="retryQuiz()">もう一度診断する</button>
+  </div>
+
+
+  <!-- ══════════════════════ AFTERGLOW ══════════════════════ -->
+  <div class="screen" id="screen-afterglow">
+    <div style="height:36px;"></div>
+
+    <p class="afterglow-body">ここまで読んでくださり、ありがとうございます。</p>
+    <p class="afterglow-body">この診断は、あなたを分類するためのものではありません。今どこにいるのかを、少しだけ照らすための小さな灯りです。</p>
+
+    <div class="afterglow-divider"></div>
+
+    <!-- ④ 自己否定がほどける余韻 -->
+    <p class="afterglow-lead">
+      もしかしたら、<br>
+      答えを探していたのではなく<br>
+      安心を探していたのかもしれません。
+    </p>
+    <p class="afterglow-body">
+      変わりたかったのではなく、<br>
+      今の自分を確認したかっただけかもしれない。
+    </p>
+
+    <div class="afterglow-poem">
+      だから、<br>
+      今まで検索して、調べて、<br>
+      保存し続けてきた時間は<br>
+      無駄ではなかった。<br><br>
+      それはすべて、<br>
+      あなたが自分の声を<br>
+      諦めていなかった証です。
+    </div>
+
+    <p class="afterglow-body">
+      答えを探し続けることに疲れたとき。<br>
+      自分の感覚が分からなくなったとき。
+    </p>
+    <p class="afterglow-body">
+      深海の底では、<br>
+      あなた自身の声がずっと響いています。
+    </p>
+    <p class="afterglow-body">
+      誰かの言葉ではなく、<br>
+      理論でもなく、<br>
+      あなたの内側だけが知っている<br>
+      静かな響き。
+    </p>
+
+    <!-- ③ Echo概念の自然な導入 -->
+    <p class="afterglow-small">
+      私はその響きを「Echo」と呼んでいます。
+    </p>
+
+    <p class="afterglow-body">
+      その響きを受け取るための<br>
+      小さな航海を用意しました。
+    </p>
+
+    <!-- CTA -->
+    <div class="cta-block">
+      <span class="cta-eyebrow">— the invitation</span>
+      <h3 class="cta-title">７日間の深海への招待状</h3>
+      <p class="cta-body">
+        答えを増やすことを少し休んで、<br>
+        置き去りにしていた感覚を<br>
+        思い出すための7日間。<br>
+        あなた自身の深海へ還るための小さな航海です。
+      </p>
+      <a class="cta-btn" href="#LINE">深海への招待状を受け取る</a>
+    </div>
+
+    <button class="retry-btn" onclick="retryQuiz()" style="margin-top:32px;">もう一度診断する</button>
+    <p class="closing-brand">LunaRa Lab</p>
+  </div>
+
+</div>
+
+
+<script>
+/* ══════════════════════════════════════════
+   BACKGROUND CANVAS
+══════════════════════════════════════════ */
+(function(){
+  const canvas = document.getElementById('bg-canvas');
+  const ctx    = canvas.getContext('2d');
+  let W, H;
+  const depthColors = [
+    { d:0.00, r:14,  g:58,  b:110 },
+    { d:0.35, r:8,   g:36,  b:74  },
+    { d:0.65, r:4,   g:18,  b:42  },
+    { d:1.00, r:1,   g:6,   b:18  },
+  ];
+  function lerpColor(d) {
+    let lo = depthColors[0], hi = depthColors[depthColors.length-1];
+    for (let i=0; i<depthColors.length-1; i++) {
+      if (d >= depthColors[i].d && d <= depthColors[i+1].d) { lo=depthColors[i]; hi=depthColors[i+1]; break; }
+    }
+    const t = (d-lo.d)/(hi.d-lo.d||1);
+    return { r:Math.round(lo.r+(hi.r-lo.r)*t), g:Math.round(lo.g+(hi.g-lo.g)*t), b:Math.round(lo.b+(hi.b-lo.b)*t) };
+  }
+  let currentDepth=0;
+  window._bgDepth=0;
+  let particles=[];
+  function makeP() { return { x:Math.random()*W, y:Math.random()*H+H, r:Math.random()*1.3+0.2, vy:-(Math.random()*0.18+0.04), vx:(Math.random()-0.5)*0.1 }; }
+  function resize() {
+    W=canvas.width=window.innerWidth; H=canvas.height=window.innerHeight;
+    canvas.style.width=W+'px'; canvas.style.height=H+'px';
+    particles=Array.from({length:40},makeP);
+  }
+  function draw() {
+    currentDepth+=(window._bgDepth-currentDepth)*0.03;
+    const c=lerpColor(currentDepth);
+    const grd=ctx.createLinearGradient(0,0,0,H);
+    grd.addColorStop(0,`rgb(${c.r},${c.g},${c.b})`);
+    grd.addColorStop(1,`rgb(${Math.max(0,c.r-3)},${Math.max(0,c.g-3)},${Math.max(0,c.b-3)})`);
+    ctx.fillStyle=grd; ctx.fillRect(0,0,W,H);
+    if (currentDepth<0.4) {
+      const ba=(0.4-currentDepth)/0.4*0.07;
+      [W*0.25,W*0.62].forEach(bx=>{
+        const bg=ctx.createLinearGradient(bx,0,bx,H*0.55);
+        bg.addColorStop(0,`rgba(130,200,240,${ba})`); bg.addColorStop(1,`rgba(130,200,240,0)`);
+        ctx.fillStyle=bg; ctx.beginPath();
+        ctx.moveTo(bx-16,0); ctx.lineTo(bx+16,0); ctx.lineTo(bx+5,H*0.55); ctx.lineTo(bx-5,H*0.55);
+        ctx.closePath(); ctx.fill();
+      });
+    }
+    if (currentDepth>0.75) {
+      const gi=(currentDepth-0.75)/0.25;
+      const gx=ctx.createRadialGradient(W/2,H,0,W/2,H,W*0.4);
+      gx.addColorStop(0,`rgba(91,200,232,${0.1*gi})`); gx.addColorStop(1,`rgba(20,80,130,0)`);
+      ctx.fillStyle=gx; ctx.fillRect(0,0,W,H);
+    }
+    const maxP=Math.round(40*(1-currentDepth*0.65));
+    const pa=Math.max(0.04,0.3-currentDepth*0.24);
+    for (let i=0; i<Math.min(particles.length,maxP); i++) {
+      const p=particles[i];
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(168,220,248,${pa})`; ctx.fill();
+      p.x+=p.vx; p.y+=p.vy*(1-currentDepth*0.45);
+      if (p.y<-10) particles[i]=makeP();
+    }
+    requestAnimationFrame(draw);
+  }
+  resize(); draw();
+  window.addEventListener('resize',resize);
+})();
+
+/* ══════════════════════════════════════════
+   INIT: intro を初期表示
+══════════════════════════════════════════ */
+(function(){
+  const intro = document.getElementById('screen-intro');
+  if (intro) {
+    intro.style.opacity       = '1';
+    intro.style.transform     = 'translateY(0px)';
+    intro.style.pointerEvents = 'auto';
+    intro.style.position      = 'relative';
+  }
+})();
+(function(){
+  let t=0;
+  const w1=document.getElementById('intro-wave1');
+  const w2=document.getElementById('intro-wave2');
+  if (!w1) return;
+  function mkPath(phase,amp,yBase) {
+    const segs=20,W=480; let d=`M0,${yBase}`;
+    for (let i=1;i<=segs;i++) {
+      const x=(i/segs)*W;
+      const y=yBase+Math.sin(i/segs*Math.PI*2.8+phase)*amp+Math.sin(i/segs*Math.PI*4.5+phase*1.4)*(amp*0.35);
+      d+=` L${x.toFixed(1)},${y.toFixed(1)}`;
+    }
+    return d;
+  }
+  function anim() {
+    t+=0.016;
+    if(w1) w1.setAttribute('d',mkPath(t,7,22));
+    if(w2) w2.setAttribute('d',mkPath(t,7,22)+' L480,44 L0,44 Z');
+    requestAnimationFrame(anim);
+  }
+  anim();
+})();
+
+/* ══════════════════════════════════════════
+   QUIZ LOGIC
+══════════════════════════════════════════ */
+
+// ⑤ 質問文：改行タグ込みのHTML文字列で定義
+const QUESTIONS_HTML = [
+  `夜中。「もう寝よう」と思いながら<br>ベッドの中でスマホを見ている。<span class="q-pause"></span>青白い光の中で、気づけば何かを検索している。`,
+
+  `「これだ」と思って無意識に指が動いて<br>保存した投稿やスクショ。<span class="q-pause"></span>気づけばたくさん溜まっているのに、<br>ほとんど見返せていない。`,
+
+  `占いの結果を聞いて<br>「大丈夫なんだ」と安心する。<span class="q-pause"></span>でも数日後の夜、<br>スマホの画面をじっと見ながら、また別の答えを探している。`,
+
+  `ノートを開く。<br>「私は本当はどうしたいんだろう」と書く。<span class="q-pause"></span>そのまま手が止まる。<br>何か落ち着かなくて、気づけば別のことを始めている。`,
+
+  `SNSで「使命」「本来の自分」という言葉を<br>見かけると、スクロールしていた指が止まる。<span class="q-pause"></span>そして気づけば、その続きを読んでいる。`,
+
+  `周りからは「順調そうだね」と言われる。<span class="q-pause"></span>でも帰り道やお風呂の時間に、<br>ふと「何かが違う」と感じることがある。`,
+
+  `「今、何を感じてる？」そう聞かれたとき、<span class="q-pause"></span>感じる前に頭の中で答えを探し始めてしまう。`,
+];
+
+const RESULTS = [
+  {
+    range: '0 — 2',
+    type:  '静かな凪の層',
+    depth: 0.3,
+    body: [
+      'あなたは今、自分の感覚との距離が比較的近い場所にいるようです。',
+      'けれど時々、「もっと変わらなければ」「もっと深く理解しなければ」という焦りが生まれることもあるかもしれません。',
+    ],
+    strength: 'すでに自分の感覚へ戻る道を知っていること。',
+    close: '必要なのは何かを足すことではなく、今ここにある感覚を少し信頼してみることなのかもしれません。',
+  },
+  {
+    range: '3 — 5',
+    type:  '波打ち際の貝殻コレクター',
+    depth: 0.6,
+    body: [
+      'あなたは今、波打ち際でたくさんの貝殻を集めている時期かもしれません。',
+      'そのひとつひとつは、あなたが真剣に自分と向き合ってきた証です。',
+      'だから今まで集めてきたものを否定する必要はありません。',
+    ],
+    strength: '自分を諦めずに探し続けてきたこと。',
+    close: 'もしかするとあなたが探していたものは、次の貝殻ではなく、波が静まったあとに残る小さな響きだったのかもしれません。',
+  },
+  {
+    range: '6 — 7',
+    type:  '浮上反応のループ層',
+    depth: 0.9,
+    body: [
+      'もしかすると今、答えを探し続けることに少し疲れているのかもしれません。',
+      '本音がないわけではありません。足りないわけでもありません。',
+      'ただ、本音に近づこうとした瞬間に、無意識に海面へ戻る癖が続いていただけなのかもしれません。',
+      '深海Echoでは、本音に触れる直前に海面へ戻ろうとする反応を「浮上反応」と呼んでいます。',
+      '深海の底にあるクリスタルは、ずっとそこにあります。',
+    ],
+    strength: 'それだけ本気で自分の本音を探してきたこと。',
+    close: '今は新しい答えを探すことよりも、少し立ち止まることが必要な時期なのかもしれません。',
+  },
+];
+
+let currentQ    = 0;
+let answers     = new Array(QUESTIONS_HTML.length).fill(null);
+let selectedNow = null;
+
+function getResult(score) {
+  if (score <= 2) return RESULTS[0];
+  if (score <= 5) return RESULTS[1];
+  return RESULTS[2];
+}
+
+/* ── アニメーション共通関数 ── */
+function ease(t) {
+  // cubic-bezier相当の近似: ease-out cubic
+  return 1 - Math.pow(1 - t, 3);
+}
+function easeDeep(t) {
+  // より柔らかい ease-out quint
+  return 1 - Math.pow(1 - t, 4);
+}
+
+function animateFade(el, from, to, duration, easeFn, onComplete) {
+  const start = performance.now();
+  function frame(now) {
+    const raw = Math.min((now - start) / duration, 1);
+    const val = from + (to - from) * easeFn(raw);
+    el.style.opacity = val;
+    if (raw < 1) {
+      requestAnimationFrame(frame);
+    } else {
+      el.style.opacity = to;
+      if (onComplete) onComplete();
+    }
+  }
+  requestAnimationFrame(frame);
+}
+
+function animateFadeY(el, fromO, toO, fromY, toY, duration, easeFn, onComplete) {
+  const start = performance.now();
+  function frame(now) {
+    const raw = Math.min((now - start) / duration, 1);
+    const t   = easeFn(raw);
+    el.style.opacity   = fromO + (toO - fromO) * t;
+    el.style.transform = `translateY(${fromY + (toY - fromY) * t}px)`;
+    if (raw < 1) {
+      requestAnimationFrame(frame);
+    } else {
+      el.style.opacity   = toO;
+      el.style.transform = `translateY(${toY}px)`;
+      if (onComplete) onComplete();
+    }
+  }
+  requestAnimationFrame(frame);
+}
+
+// deep=true のとき時間・イージングが重くなる
+function showScreen(id, options = {}) {
+  const { delay = 0, deep = false } = options;
+  const fadeOutDur = 260;
+  const fadeInDur  = deep ? 780 : 620;
+  const efn        = deep ? easeDeep : ease;
+
+  const current = document.querySelector('.screen.active');
+  const next    = document.getElementById(id);
+  if (!next || next === current) return;
+
+  function doTransition() {
+    // 現在画面をフェードアウト
+    if (current) {
+      current.style.pointerEvents = 'none';
+      animateFadeY(current, parseFloat(current.style.opacity)||1, 0, 0, -6, fadeOutDur, ease, () => {
+        current.classList.remove('active');
+        current.style.position  = 'absolute';
+        current.style.transform = 'translateY(0px)';
+      });
+    }
+
+    // フェードアウト完了後に次画面をフェードイン
+    setTimeout(() => {
+      next.classList.add('active');
+      next.style.position      = 'relative';
+      next.style.opacity       = '0';
+      next.style.transform     = `translateY(${deep ? 16 : 12}px)`;
+      next.style.pointerEvents = 'none';
+      window.scrollTo({ top: 0, behavior: 'instant' });
+
+      // 1フレーム置いてからイン
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          animateFadeY(next, 0, 1, deep ? 16 : 12, 0, fadeInDur, efn, () => {
+            next.style.pointerEvents = 'auto';
+          });
+        });
+      });
+    }, fadeOutDur + 20);
+  }
+
+  if (delay > 0) {
+    setTimeout(doTransition, delay);
+  } else {
+    doTransition();
+  }
+}
+
+function startQuiz() {
+  currentQ = 0;
+  answers  = new Array(QUESTIONS_HTML.length).fill(null);
+  renderQuestion();
+  document.getElementById('progress-wrap').style.display = 'block';
+  showScreen('screen-question', { delay: 100, deep: true });
+}
+
+function retryQuiz() {
+  document.getElementById('progress-wrap').style.display = 'none';
+  window._bgDepth = 0;
+  showScreen('screen-intro', { delay: 0 });
+}
+
+function renderQuestion() {
+  selectedNow = null;
+  const num = String(currentQ + 1).padStart(2, '0');
+  const pct = Math.round((currentQ / QUESTIONS_HTML.length) * 100);
+
+  document.getElementById('q-number').textContent = num;
+  document.getElementById('q-text').innerHTML     = QUESTIONS_HTML[currentQ];
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-label').textContent = `${currentQ + 1} / ${QUESTIONS_HTML.length}`;
+
+  // back button
+  const backBtn = document.getElementById('back-btn');
+  if (currentQ === 0) {
+    backBtn.classList.add('hidden');
+  } else {
+    backBtn.classList.remove('hidden');
+  }
+
+  // restore previous answer if exists
+  const prev = answers[currentQ];
+  document.getElementById('opt-yes').classList.toggle('selected', prev === 1);
+  document.getElementById('opt-no').classList.toggle('selected',  prev === 0);
+  document.getElementById('next-btn').disabled = (prev === null);
+
+  if (prev !== null) selectedNow = prev;
+
+  // depth by progress
+  window._bgDepth = 0.12 + (currentQ / QUESTIONS_HTML.length) * 0.6;
+}
+
+function selectAnswer(val) {
+  selectedNow    = val;
+  answers[currentQ] = val;
+  document.getElementById('opt-yes').classList.toggle('selected', val === 1);
+  document.getElementById('opt-no').classList.toggle('selected',  val === 0);
+  document.getElementById('next-btn').disabled = false;
+}
+
+function fadeQuestion(dir, callback) {
+  // dir: 1=次へ(上へ消える), -1=前へ(下へ消える)
+  const el = document.getElementById('screen-question');
+  const outY = dir > 0 ? -8 : 8;
+  el.style.pointerEvents = 'none';
+  animateFadeY(el, 1, 0, 0, outY, 240, ease, () => {
+    callback();
+    el.style.transform = `translateY(${dir > 0 ? 12 : -8}px)`;
+    el.style.opacity   = '0';
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        animateFadeY(el, 0, 1, dir > 0 ? 12 : -8, 0, 640, ease, () => {
+          el.style.pointerEvents = 'auto';
+        });
+      });
+    });
+  });
+}
+
+function prevQuestion() {
+  if (currentQ <= 0) return;
+  fadeQuestion(-1, () => {
+    currentQ--;
+    renderQuestion();
+  });
+}
+
+function nextQuestion() {
+  if (selectedNow === null) return;
+  if (currentQ < QUESTIONS_HTML.length - 1) {
+    fadeQuestion(1, () => {
+      currentQ++;
+      renderQuestion();
+    });
+  } else {
+    showResults();
+  }
+}
+
+function showResults() {
+  const score  = answers.reduce((a,b) => a + b, 0);
+  const result = getResult(score);
+  window._bgDepth = result.depth;
+  document.getElementById('progress-wrap').style.display = 'none';
+
+  document.getElementById('result-range').textContent = result.range + ' 個';
+  document.getElementById('result-type').textContent  = result.type;
+
+  const wrap = document.getElementById('result-body-wrap');
+  wrap.innerHTML = '';
+  result.body.forEach(text => {
+    const p = document.createElement('p');
+    p.className = 'result-body';
+    p.textContent = text;
+    wrap.appendChild(p);
+  });
+  const box = document.createElement('div');
+  box.className = 'result-strength';
+  box.innerHTML = `<strong>あなたの強み</strong>${result.strength}`;
+  wrap.appendChild(box);
+  const close = document.createElement('p');
+  close.className = 'result-body';
+  close.textContent = result.close;
+  wrap.appendChild(close);
+
+  showScreen('screen-result', { delay: 180, deep: true });
+}
+
+function showAfterglow() {
+  window._bgDepth = 0.88;
+  showScreen('screen-afterglow', { delay: 80, deep: true });
+}
+</script>
+</body>
+</html>
