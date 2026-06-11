@@ -1,0 +1,1556 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>深海Echo — ５日間の感覚探査ログ | LunaRa Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400&family=Cormorant+Garamond:ital,wght@0,300;1,300&display=swap" rel="stylesheet">
+<style>
+
+/* ═══════════════════════════════════════
+   BASE
+═══════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; }
+
+:root {
+  --serif: 'Noto Serif JP', Georgia, serif;
+  --display: 'Cormorant Garamond', Georgia, serif;
+}
+
+body {
+  font-family: var(--serif);
+  background: #0A1E3D;
+  color: #E8F0F8;
+  overflow-x: hidden;
+}
+
+/* ═══════════════════════════════════════
+   SCROLL DEPTH ENGINE
+   bodyにdata-depthを0→1で設定し、
+   CSSカスタムプロパティで全体を制御
+═══════════════════════════════════════ */
+
+/* ── 深度別 背景色テーブル ── */
+/* depth 0.00: 海面   #0E3A6E 明るい青 */
+/* depth 0.20: 浅瀬   #0A2E58          */
+/* depth 0.40: 中層   #061E3A          */
+/* depth 0.60: 深海   #030D20          */
+/* depth 0.85: 最深部 #010812          */
+/* depth 1.00: クリスタル #010608      */
+
+
+/* ═══════════════════════════════════════
+   DEPTH CANVAS (full-page fixed bg)
+═══════════════════════════════════════ */
+#depth-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ═══════════════════════════════════════
+   SECTIONS — all z-index:1 over canvas
+═══════════════════════════════════════ */
+.chapter {
+  position: relative;
+  z-index: 1;
+  max-width: 660px;
+  margin: 0 auto;
+  padding: 0 32px;
+}
+
+/* ── HERO: 海面 ── */
+#s-hero {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding-bottom: 80px;
+}
+.hero-brand {
+  font-family: var(--display);
+  font-size: 0.68rem;
+  letter-spacing: 0.55em;
+  color: rgba(180,220,255,0.78);
+  margin-bottom: 48px;
+}
+.hero-title {
+  font-size: clamp(2rem, 5.5vw, 3.2rem);
+  font-weight: 300;
+  line-height: 1.4;
+  letter-spacing: 0.1em;
+  color: #E8F4FF;
+  margin-bottom: 28px;
+}
+.hero-title em {
+  font-style: normal;
+  color: #A8DEFF;
+}
+.hero-sub {
+  font-family: var(--display);
+  font-style: italic;
+  font-size: 1rem;
+  color: rgba(200,230,255,0.6);
+  letter-spacing: 0.12em;
+  margin-bottom: 60px;
+  line-height: 1.9;
+}
+.scroll-guide {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  animation: guide-fade 3s ease-in-out infinite;
+}
+.scroll-guide-line {
+  width: 1px;
+  height: 64px;
+  background: linear-gradient(to bottom, rgba(168,222,255,0.45), transparent);
+}
+@keyframes guide-fade {
+  0%,100% { opacity: 0.35; transform: translateY(0); }
+  50%      { opacity: 0.7;  transform: translateY(5px); }
+}
+
+/* ── WAVE VISUAL ── */
+#wave-section {
+  height: 220px;
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+}
+
+/* ── EMPATHY: 浅瀬 ── */
+#s-empathy { padding-top: 100px; padding-bottom: 100px; }
+
+/* ── LOOP: 中層 ── */
+#s-loop { padding-top: 120px; padding-bottom: 120px; }
+
+/* ── WHAT: 深海 ── */
+#s-what { padding-top: 140px; padding-bottom: 100px; }
+
+/* ── WORLD VIS ── */
+#s-worldvis { padding-top: 0; padding-bottom: 120px; }
+
+/* ── STEPS ── */
+#s-steps { padding-top: 100px; padding-bottom: 120px; }
+
+/* ── BA ── */
+#s-ba { padding-top: 100px; padding-bottom: 120px; }
+
+/* ── FOR WHOM ── */
+#s-for { padding-top: 100px; padding-bottom: 100px; }
+
+/* ── NOT FOR ── */
+#s-notfor { padding-top: 60px; padding-bottom: 100px; }
+
+/* ── CONTENTS ── */
+#s-contents { padding-top: 100px; padding-bottom: 100px; }
+
+/* ── FAQ ── */
+#s-faq { padding-top: 80px; padding-bottom: 100px; }
+
+/* ── PRICE ── */
+#s-price { padding-top: 100px; padding-bottom: 120px; }
+
+/* ── CLOSING: 最深部 ── */
+#s-closing {
+  min-height: 80vh;
+  padding-top: 120px;
+  padding-bottom: 120px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+
+/* ═══════════════════════════════════════
+   TYPOGRAPHY
+═══════════════════════════════════════ */
+.eyebrow {
+  font-family: var(--display);
+  font-size: 0.65rem;
+  letter-spacing: 0.5em;
+  color: rgba(100,190,230,0.5);
+  margin-bottom: 28px;
+  display: block;
+}
+h2 {
+  font-size: clamp(1.55rem, 4vw, 2.1rem);
+  font-weight: 300;
+  line-height: 1.55;
+  letter-spacing: 0.1em;
+  color: #E8F2FF;
+  margin-bottom: 40px;
+}
+p {
+  font-size: 0.93rem;
+  line-height: 2.05;
+  color: rgba(220,236,252,0.7);
+  margin-bottom: 24px;
+}
+p.lead {
+  font-size: 1.02rem;
+  color: rgba(228,242,255,0.88);
+  line-height: 2.1;
+}
+strong { color: #E8F2FF; font-weight: 400; }
+
+.thin-rule {
+  width: 32px;
+  height: 1px;
+  background: rgba(100,190,230,0.35);
+  margin: 44px 0;
+}
+
+blockquote {
+  border-left: 1px solid rgba(100,190,230,0.3);
+  padding: 20px 28px;
+  margin: 36px 0;
+  font-size: 1.02rem;
+  font-weight: 300;
+  line-height: 2;
+  letter-spacing: 0.08em;
+  color: #D8EEFF;
+  background: rgba(100,190,230,0.03);
+}
+
+/* ═══════════════════════════════════════
+   LOOP VISUAL (浮上反応)
+═══════════════════════════════════════ */
+.loop-visual {
+  margin: 52px 0;
+  position: relative;
+  padding: 0 8px;
+}
+.loop-ring {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+  position: relative;
+}
+.loop-node {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 14px 0;
+}
+.loop-node-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(100,180,220,0.35);
+  flex-shrink: 0;
+  position: relative;
+}
+.loop-node-dot.active {
+  background: #5BC8E8;
+  box-shadow: 0 0 12px rgba(91,200,232,0.6);
+}
+.loop-node-label {
+  font-family: var(--serif);
+  font-size: 0.9rem;
+  color: rgba(200,228,248,0.6);
+  letter-spacing: 0.06em;
+}
+.loop-node.highlight .loop-node-label {
+  color: #C8E8F8;
+  font-size: 1rem;
+}
+.loop-connector {
+  width: 1px;
+  height: 22px;
+  background: rgba(91,200,232,0.2);
+  margin-left: 3px;
+}
+/* 矢印で循環を示す */
+.loop-back-arrow {
+  font-family: var(--display);
+  font-size: 0.7rem;
+  letter-spacing: 0.3em;
+  color: rgba(91,200,232,0.25);
+  margin-top: 8px;
+  margin-left: 3px;
+}
+
+
+/* ═══════════════════════════════════════
+   WORLD VIS — 感情=波, 海流, クリスタル
+═══════════════════════════════════════ */
+.world-vis-wrap {
+  margin: 64px 0 80px;
+}
+.vis-block {
+  margin-bottom: 72px;
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.9s ease, transform 0.9s ease;
+}
+.vis-block.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.vis-label {
+  font-family: var(--display);
+  font-size: 0.65rem;
+  letter-spacing: 0.45em;
+  color: rgba(91,200,232,0.45);
+  margin-bottom: 14px;
+  display: block;
+}
+.vis-title {
+  font-family: var(--serif);
+  font-size: 1.05rem;
+  font-weight: 300;
+  color: #D8EEFF;
+  letter-spacing: 0.1em;
+  margin-bottom: 20px;
+}
+.vis-desc {
+  font-size: 0.85rem;
+  color: rgba(200,224,248,0.55);
+  line-height: 1.9;
+  margin-bottom: 0;
+}
+/* SVGラッパー */
+.vis-svg-wrap {
+  width: 100%;
+  overflow: hidden;
+  margin-bottom: 18px;
+}
+.vis-svg-wrap svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+
+/* ═══════════════════════════════════════
+   STEPS
+═══════════════════════════════════════ */
+.step-list { list-style: none; margin-top: 48px; }
+.step-item {
+  display: flex;
+  gap: 28px;
+  align-items: flex-start;
+  margin-bottom: 52px;
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.7s, transform 0.7s;
+}
+.step-item.visible { opacity: 1; transform: translateY(0); }
+.step-num {
+  font-family: var(--display);
+  font-size: 2.2rem;
+  font-weight: 300;
+  color: rgba(91,200,232,0.22);
+  line-height: 1;
+  min-width: 40px;
+  padding-top: 6px;
+}
+.step-body h3 {
+  font-size: 1rem;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  color: #D8EEFF;
+  margin-bottom: 8px;
+}
+.step-body p { font-size: 0.86rem; margin-bottom: 0; }
+
+
+/* ═══════════════════════════════════════
+   BEFORE/AFTER
+═══════════════════════════════════════ */
+.ba-wrap {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: rgba(91,200,232,0.07);
+  margin-top: 48px;
+  border: 1px solid rgba(91,200,232,0.07);
+}
+.ba-col { background: rgba(1,8,18,0.6); padding: 32px 24px; }
+.ba-col-label {
+  font-family: var(--display);
+  font-size: 0.62rem;
+  letter-spacing: 0.45em;
+  display: block;
+  margin-bottom: 24px;
+}
+.ba-col.before .ba-col-label { color: rgba(200,220,240,0.28); }
+.ba-col.after  .ba-col-label { color: rgba(91,200,232,0.7); }
+.ba-list { list-style: none; }
+.ba-list li {
+  font-size: 0.86rem;
+  line-height: 1.85;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  color: rgba(200,220,240,0.5);
+}
+.ba-list li:last-child { border-bottom: none; }
+.ba-col.after .ba-list li { color: rgba(200,228,248,0.82); }
+
+
+/* ═══════════════════════════════════════
+   CHECK LISTS
+═══════════════════════════════════════ */
+.check-list { list-style: none; margin-top: 32px; }
+.check-list li {
+  font-size: 0.9rem;
+  color: rgba(200,224,248,0.65);
+  padding: 11px 0 11px 24px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  line-height: 1.85;
+  position: relative;
+}
+.check-list li:last-child { border-bottom: none; }
+.check-list li::before {
+  content: '—';
+  position: absolute;
+  left: 0;
+  color: rgba(91,200,232,0.3);
+  font-size: 0.78rem;
+}
+.check-list.pos li::before { content: '◦'; color: rgba(91,200,232,0.6); }
+
+
+/* ═══════════════════════════════════════
+   CONTENTS
+═══════════════════════════════════════ */
+.contents-list { list-style: none; margin-top: 44px; }
+.content-item {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  padding: 28px 0;
+  border-bottom: 1px solid rgba(91,200,232,0.07);
+}
+.content-item:last-child { border-bottom: none; }
+.content-icon {
+  font-family: var(--display);
+  font-size: 1.1rem;
+  color: rgba(91,200,232,0.35);
+  min-width: 24px;
+  margin-top: 3px;
+}
+.content-item h3 {
+  font-size: 0.96rem;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  color: #D0E8F8;
+  margin-bottom: 6px;
+}
+.content-item p { font-size: 0.85rem; margin-bottom: 0; }
+
+.meta-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: rgba(91,200,232,0.07);
+  margin-top: 40px;
+  border: 1px solid rgba(91,200,232,0.07);
+}
+.meta-cell {
+  background: rgba(1,8,18,0.5);
+  padding: 24px 20px;
+}
+.meta-cell-label {
+  font-family: var(--display);
+  font-size: 0.6rem;
+  letter-spacing: 0.4em;
+  color: rgba(91,200,232,0.4);
+  display: block;
+  margin-bottom: 8px;
+}
+.meta-cell-val {
+  font-size: 0.95rem;
+  font-weight: 300;
+  color: #D0E8F8;
+  letter-spacing: 0.05em;
+}
+
+
+/* ═══════════════════════════════════════
+   FAQ
+═══════════════════════════════════════ */
+.faq-item {
+  padding: 26px 0;
+  border-bottom: 1px solid rgba(91,200,232,0.08);
+}
+.faq-q {
+  font-size: 0.93rem;
+  color: #C8E0F0;
+  margin-bottom: 12px;
+  line-height: 1.8;
+}
+.faq-q::before {
+  content: 'Q. ';
+  font-family: var(--display);
+  color: rgba(91,200,232,0.6);
+}
+.faq-a { font-size: 0.86rem; padding-left: 20px; }
+
+
+/* ═══════════════════════════════════════
+   PRICE
+═══════════════════════════════════════ */
+.price-frame {
+  border: 1px solid rgba(91,200,232,0.15);
+  padding: 56px 44px;
+  text-align: center;
+  background: rgba(1,6,14,0.5);
+  position: relative;
+  margin-top: 48px;
+}
+.price-frame::before {
+  content: '';
+  position: absolute;
+  top: -1px; left: 50%;
+  transform: translateX(-50%);
+  width: 48px; height: 1px;
+  background: rgba(91,200,232,0.5);
+}
+.limit-tag {
+  display: inline-block;
+  font-family: var(--display);
+  font-size: 0.65rem;
+  letter-spacing: 0.45em;
+  color: rgba(91,200,232,0.7);
+  border: 1px solid rgba(91,200,232,0.2);
+  padding: 6px 20px;
+  margin-bottom: 36px;
+}
+.price-num {
+  font-family: var(--display);
+  font-size: 3rem;
+  font-weight: 300;
+  color: #E4F2FF;
+  letter-spacing: 0.04em;
+  margin-bottom: 6px;
+}
+.price-note {
+  font-size: 0.75rem;
+  color: rgba(200,220,240,0.35);
+  letter-spacing: 0.15em;
+  margin-bottom: 36px;
+}
+.cta-btn {
+  display: block;
+  max-width: 340px;
+  margin: 0 auto;
+  padding: 19px 28px;
+  border: 1px solid rgba(91,200,232,0.35);
+  background: transparent;
+  color: #D0E8F8;
+  font-family: var(--serif);
+  font-size: 0.9rem;
+  letter-spacing: 0.22em;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition: border-color 0.4s, color 0.4s, background 0.4s;
+  position: relative;
+  overflow: hidden;
+}
+.cta-btn:hover {
+  border-color: rgba(91,200,232,0.75);
+  color: #A8DCEF;
+  background: rgba(91,200,232,0.04);
+}
+.cta-sub {
+  font-size: 0.74rem;
+  color: rgba(180,210,235,0.3);
+  margin-top: 20px;
+  letter-spacing: 0.1em;
+  line-height: 1.9;
+}
+
+
+/* ═══════════════════════════════════════
+   CLOSING — 最深部
+═══════════════════════════════════════ */
+.crystal-orb {
+  width: 48px;
+  height: 48px;
+  position: relative;
+  margin: 0 auto 56px;
+}
+.crystal-orb::before, .crystal-orb::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, #5BC8E8 0%, rgba(91,200,232,0.1) 70%);
+  animation: orb-pulse 3.5s ease-in-out infinite;
+}
+.crystal-orb::after { animation-delay: 1.75s; }
+@keyframes orb-pulse {
+  0%,100% { transform: scale(0.55); opacity: 0.7; }
+  50%      { transform: scale(1.15); opacity: 0.1; }
+}
+.closing-quote {
+  font-size: clamp(1.05rem, 3.2vw, 1.45rem);
+  font-weight: 300;
+  line-height: 2.2;
+  letter-spacing: 0.1em;
+  color: #C8E4F8;
+  margin-bottom: 56px;
+  max-width: 480px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.closing-quote .crystal-word { color: #5BC8E8; }
+.closing-cta-wrap { width: 100%; max-width: 300px; margin: 0 auto; }
+.closing-brand {
+  font-family: var(--display);
+  font-size: 0.58rem;
+  letter-spacing: 0.6em;
+  color: rgba(140,190,220,0.45);
+  margin-top: 60px;
+  text-align: center;
+}
+
+
+/* ═══════════════════════════════════════
+   FADE-IN UTILITY
+═══════════════════════════════════════ */
+.fade-up {
+  opacity: 0;
+  transform: translateY(22px);
+  transition: opacity 0.85s ease, transform 0.85s ease;
+}
+.fade-up.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ─── section divider ─── */
+.depth-divider {
+  position: relative;
+  z-index: 1;
+  max-width: 660px;
+  margin: 0 auto;
+  padding: 0 32px;
+}
+.depth-divider-line {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(91,200,232,0.12), transparent);
+}
+
+/* ─── mobile ─── */
+@media (max-width: 600px) {
+  .chapter { padding: 0 22px; }
+  .ba-wrap { grid-template-columns: 1fr; }
+  .price-frame { padding: 40px 24px; }
+  .closing-quote { font-size: 1rem; letter-spacing: 0.08em; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════
+     DEPTH CANVAS — スクロール連動で背景を描画
+═══════════════════════════════════════ -->
+<canvas id="depth-canvas" aria-hidden="true"></canvas>
+
+
+<!-- ═══════════════════════════════════════
+     ① HERO — 海面
+═══════════════════════════════════════ -->
+<section id="s-hero" data-depth="0">
+  <div class="chapter">
+    <p class="hero-brand">LunaRa Lab</p>
+    <h1 class="hero-title">
+      あなたの中に、<br>
+      まだ<em>聴いていない</em><br>
+      声がある。
+    </h1>
+    <p class="hero-sub">
+      深海Echo — ５日間の感覚探査ログ<br><br>
+      正解という「貝殻」を<br>
+      拾い集めるのをやめて、<br><br>
+      自分自身の深海へ、静かに還る旅へ。
+    </p>
+    <div class="scroll-guide" aria-hidden="true">
+      <div class="scroll-guide-line"></div>
+    </div>
+  </div>
+</section>
+
+<!-- Wave Visual: 感情=波 の最初の提示 -->
+<div id="wave-section" aria-hidden="true">
+  <svg viewBox="0 0 660 120" preserveAspectRatio="none"
+       style="width:100%;height:120px;display:block;position:relative;z-index:1;">
+    <!-- 波の3層: 表層・中層・深層 -->
+    <path id="wave3" d="" fill="rgba(30,80,140,0.18)"/>
+    <path id="wave2" d="" fill="rgba(15,55,110,0.22)"/>
+    <path id="wave1" d="" fill="rgba(8,35,80,0.28)"/>
+    <!-- ラベル -->
+    <text x="320" y="108" text-anchor="middle"
+          font-family="Cormorant Garamond, Georgia, serif"
+          font-size="9" letter-spacing="6"
+          fill="rgba(168,210,240,0.3)">EMOTION — WAVE</text>
+  </svg>
+</div>
+
+
+<!-- ═══════════════════════════════════════
+     ② EMPATHY — 浅瀬
+═══════════════════════════════════════ -->
+<section id="s-empathy" data-depth="0.18">
+  <div class="chapter">
+    <span class="eyebrow">— 浅瀬</span>
+    <h2 class="fade-up">
+      「変わりたい」のに<br>
+      変われない。
+    </h2>
+    <div class="fade-up">
+      <p class="lead">
+        そんな夜の、あなたの隣に立たせてください。
+      </p>
+      <p>
+        きっと、たくさん調べてきましたよね。
+      </p>
+      <p>
+        占いの結果。自己分析のノート。<br>
+        心に響くスピリチュアルな言葉。心理学の動画。
+      </p>
+      <p>
+        スマホを握りしめ、<br>
+        青白い光だけを見つめていた夜。
+      </p>
+      <p>
+        「これかもしれない」<br>
+        そう思う答えを見つけるたび、<br>
+        少しだけ救われた気持ちになった。
+      </p>
+      <p>
+        でも、画面を閉じた瞬間、<br>
+        胸の奥が、すうっと冷えていく。
+      </p>
+      <p>
+        冷たくなったスマホを置いても、<br>
+        「まだ何か足りない」<br>
+        そんな焦りだけが残る。
+      </p>
+      <p>
+        どれだけ知識を増やしても、本音が分からない。<br>
+        どれだけ学んでも、現実が変わらない。
+      </p>
+      <p>
+        本当に置き去りになっていたのは、<br>
+        外側の答えではなく、<br>
+        あなた自身の感覚だった。
+      </p>
+    </div>
+  </div>
+</section>
+
+<div class="depth-divider"><div class="depth-divider-line"></div></div>
+
+
+<!-- ═══════════════════════════════════════
+     ③ LOOP — 中層（光が減る）
+═══════════════════════════════════════ -->
+<section id="s-loop" data-depth="0.38">
+  <div class="chapter">
+    <span class="eyebrow">— 中層</span>
+    <h2 class="fade-up">
+      なぜ、本音に近づくほど<br>
+      人は離れようとするのか？
+    </h2>
+    <div class="fade-up">
+      <p>
+        本音に触れようと潜り始める時、<br>
+        私たちの心にはある反応が起きます。
+      </p>
+      <p>
+        胸がキュッとしたり。<br>
+        内側の静けさが怖くなったり。
+      </p>
+      <p>
+        すると、その苦しさから逃げるように<br>
+        外側へ答えを探しに行く。
+      </p>
+      <p>
+        本音に近づくほど、<br>
+        人は落ち着かなくなる。
+      </p>
+      <p>
+        検索したくなる。<br><br>
+        誰かに聞きたくなる。<br><br>
+        新しい答えを探したくなる。
+      </p>
+      <p>
+        深海へ潜る代わりに、<br>
+        海面へ戻ろうとする反応。
+      </p>
+      <p>
+        深海Echoでは、<br>
+        それを「<strong>浮上反応</strong>」と呼んでいます。
+      </p>
+    </div>
+
+    <!-- LOOP VISUAL -->
+    <div class="loop-visual fade-up">
+      <div class="loop-ring">
+        <div class="loop-node highlight">
+          <div class="loop-node-dot active"></div>
+          <span class="loop-node-label">本音に近づく</span>
+        </div>
+        <div class="loop-connector"></div>
+        <div class="loop-node">
+          <div class="loop-node-dot"></div>
+          <span class="loop-node-label">落ち着かなくなる</span>
+        </div>
+        <div class="loop-connector"></div>
+        <div class="loop-node">
+          <div class="loop-node-dot"></div>
+          <span class="loop-node-label">外側の答えを探す</span>
+        </div>
+        <div class="loop-connector"></div>
+        <div class="loop-node">
+          <div class="loop-node-dot"></div>
+          <span class="loop-node-label">ひとときの安心</span>
+        </div>
+        <div class="loop-connector"></div>
+        <div class="loop-node highlight">
+          <div class="loop-node-dot active"></div>
+          <span class="loop-node-label">また近づく</span>
+        </div>
+        <div class="loop-back-arrow">↺  loop</div>
+      </div>
+    </div>
+
+    <div class="fade-up">
+      <p>
+        あなたが弱いのではありません。<br>
+        意志が足りないのでもありません。
+      </p>
+      <p>
+        本音に触れる直前で、<br>
+        いつも浮上してしまっていただけ。
+      </p>
+      <blockquote>
+        本音は探すものではない。<br>
+        思い出すもの。
+      </blockquote>
+    </div>
+  </div>
+</section>
+
+<div class="depth-divider"><div class="depth-divider-line"></div></div>
+
+
+<!-- ═══════════════════════════════════════
+     ④ WHAT + WORLD VIS — 深海
+═══════════════════════════════════════ -->
+<section id="s-what" data-depth="0.6">
+  <div class="chapter">
+    <span class="eyebrow">— 深海</span>
+    <h2 class="fade-up">深海Echoとは</h2>
+    <div class="fade-up">
+      <p class="lead">
+        深海Echoは、<br>
+        あなたに答えを与えません。
+      </p>
+      <p>
+        感情は、<br>
+        表面に現れる波。
+      </p>
+      <p>
+        一次感情は、<br>
+        その奥を流れる海流。
+      </p>
+      <p>
+        そして本音は、<br>
+        深海に眠るクリスタル。
+      </p>
+      <p>
+        どれだけ波が荒れていても。<br><br>
+        どれだけ海流が乱れていても。
+      </p>
+      <p>
+        クリスタルは、<br>
+        ずっとそこから動かない。
+      </p>
+      <p>
+        深海Echoは、<br>
+        誰かがあなたの代わりに<br>
+        クリスタルを探す場所ではありません。
+      </p>
+      <p>
+        あなた自身が深海へ潜り、<br>
+        内側から返ってくる響き——<br>
+        Echoを受け取るための<br>
+        ５日間のガイドです。
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ── WORLD VISUAL ── 説明文ではなくビジュアルで伝える -->
+<section id="s-worldvis" data-depth="0.65">
+  <div class="chapter">
+
+    <!-- 感情 = 波 -->
+    <div class="vis-block">
+      <span class="vis-label">EMOTION</span>
+      <div class="vis-title">感情は、波</div>
+      <div class="vis-svg-wrap">
+        <!-- アニメートするSVG波形 -->
+        <svg viewBox="0 0 560 80" fill="none" xmlns="http://www.w3.org/2000/svg"
+             style="height:80px;">
+          <path id="emo-wave-bg"
+            d="M0,50 C70,10 140,70 210,40 C280,10 350,65 420,35 C490,5 540,45 560,42 L560,80 L0,80 Z"
+            fill="rgba(14,80,140,0.25)"/>
+          <path id="emo-wave"
+            d="M0,50 C70,10 140,70 210,40 C280,10 350,65 420,35 C490,5 540,45 560,42"
+            stroke="rgba(91,180,230,0.55)" stroke-width="1.5" fill="none"/>
+          <!-- 波の頂点マーカー -->
+          <circle cx="70" cy="20" r="2.5" fill="rgba(91,200,232,0.4)"/>
+          <circle cx="280" cy="16" r="2.5" fill="rgba(91,200,232,0.4)"/>
+          <circle cx="490" cy="10" r="2.5" fill="rgba(91,200,232,0.4)"/>
+          <text x="8" y="73" font-family="Cormorant Garamond,Georgia,serif"
+                font-size="8" letter-spacing="4" fill="rgba(120,180,220,0.3)">SURFACE</text>
+        </svg>
+      </div>
+      <p class="vis-desc">
+        表面に現れるものは、感情という波。<br>
+        波は消そうとしても、また来る。
+      </p>
+    </div>
+
+    <!-- 一次感情 = 海流 -->
+    <div class="vis-block">
+      <span class="vis-label">PRIMARY FEELING</span>
+      <div class="vis-title">一次感情は、海流</div>
+      <div class="vis-svg-wrap">
+        <svg viewBox="0 0 560 90" fill="none" xmlns="http://www.w3.org/2000/svg"
+             style="height:90px;">
+          <!-- 3本の海流ライン（ゆっくりした流れ） -->
+          <path d="M0,28 C120,18 200,38 320,24 C420,14 500,32 560,26"
+                stroke="rgba(30,100,170,0.55)" stroke-width="1" fill="none" stroke-dasharray="4 6"/>
+          <path d="M0,46 C100,36 220,58 340,44 C440,34 510,50 560,46"
+                stroke="rgba(20,80,150,0.65)" stroke-width="1.5" fill="none" stroke-dasharray="6 4"/>
+          <path d="M0,64 C130,54 210,76 330,62 C430,52 510,68 560,64"
+                stroke="rgba(14,60,120,0.75)" stroke-width="1" fill="none" stroke-dasharray="3 7"/>
+          <!-- 流向矢印 -->
+          <polygon points="546,22 556,26 546,30" fill="rgba(60,140,200,0.3)"/>
+          <polygon points="546,42 556,46 546,50" fill="rgba(60,140,200,0.35)"/>
+          <polygon points="546,60 556,64 546,68" fill="rgba(60,140,200,0.3)"/>
+          <text x="8" y="84" font-family="Cormorant Garamond,Georgia,serif"
+                font-size="8" letter-spacing="4" fill="rgba(80,140,200,0.3)">UNDERCURRENT</text>
+        </svg>
+      </div>
+      <p class="vis-desc">
+        波の下に流れる、もっと静かなもの。<br>
+        一次感情は海流のように、深く・ゆっくり動いている。
+      </p>
+    </div>
+
+    <!-- 本音 = クリスタル -->
+    <div class="vis-block">
+      <span class="vis-label">TRUE VOICE</span>
+      <div class="vis-title">本音は、深海のクリスタル</div>
+      <div class="vis-svg-wrap">
+        <svg viewBox="0 0 560 110" fill="none" xmlns="http://www.w3.org/2000/svg"
+             style="height:110px;">
+          <!-- 暗い深海背景 -->
+          <rect width="560" height="110" fill="rgba(1,6,14,0.5)" rx="0"/>
+          <!-- 光のビーム（遠くに見える光） -->
+          <radialGradient id="crystalGlow" cx="50%" cy="65%" r="35%">
+            <stop offset="0%"  stop-color="#5BC8E8" stop-opacity="0.55"/>
+            <stop offset="60%" stop-color="#5BC8E8" stop-opacity="0.08"/>
+            <stop offset="100%" stop-color="#5BC8E8" stop-opacity="0"/>
+          </radialGradient>
+          <ellipse cx="280" cy="72" rx="60" ry="32" fill="url(#crystalGlow)"/>
+          <!-- クリスタル本体 -->
+          <polygon points="280,42 296,68 280,80 264,68"
+                   fill="rgba(91,200,232,0.15)" stroke="rgba(91,200,232,0.55)" stroke-width="1"/>
+          <polygon points="280,42 296,68 280,58"
+                   fill="rgba(91,200,232,0.2)"/>
+          <polygon points="280,42 264,68 280,58"
+                   fill="rgba(91,200,232,0.1)"/>
+          <!-- 光の粒 -->
+          <circle cx="240" cy="30" r="1.2" fill="rgba(91,200,232,0.35)">
+            <animate attributeName="opacity" values="0.35;0.7;0.35" dur="3.2s" repeatCount="indefinite"/>
+          </circle>
+          <circle cx="330" cy="22" r="0.9" fill="rgba(91,200,232,0.25)">
+            <animate attributeName="opacity" values="0.25;0.6;0.25" dur="4.1s" repeatCount="indefinite"/>
+          </circle>
+          <circle cx="180" cy="55" r="1" fill="rgba(91,200,232,0.2)">
+            <animate attributeName="opacity" values="0.2;0.5;0.2" dur="2.8s" repeatCount="indefinite"/>
+          </circle>
+          <circle cx="390" cy="48" r="0.8" fill="rgba(91,200,232,0.2)">
+            <animate attributeName="opacity" values="0.2;0.55;0.2" dur="3.6s" repeatCount="indefinite"/>
+          </circle>
+          <text x="280" y="102" text-anchor="middle"
+                font-family="Cormorant Garamond,Georgia,serif"
+                font-size="8" letter-spacing="5" fill="rgba(91,200,232,0.28)">DEEP — CRYSTAL</text>
+        </svg>
+      </div>
+      <p class="vis-desc">
+        どんなに波が荒れていても、海流が乱れていても、<br>
+        クリスタルはずっとそこにある。<br>
+        それがあなた自身の本音。
+      </p>
+    </div>
+  </div>
+</section>
+
+<div class="depth-divider"><div class="depth-divider-line"></div></div>
+
+
+<!-- ═══════════════════════════════════════
+     ⑤ STEPS
+═══════════════════════════════════════ -->
+<section id="s-steps" data-depth="0.72">
+  <div class="chapter">
+    <span class="eyebrow">— 探索経路</span>
+    <h2 class="fade-up">5日間の潜水経路</h2>
+    <ul class="step-list">
+      <li class="step-item">
+        <span class="step-num">1</span>
+        <div class="step-body">
+          <h3>波に気づく</h3>
+          <p>今、自分の中に何が起きているか。感情という波の存在を、ただ観察する。</p>
+        </div>
+      </li>
+      <li class="step-item">
+        <span class="step-num">2</span>
+        <div class="step-body">
+          <h3>海流を辿る</h3>
+          <p>表面の感情の下を流れる一次感情を感じ取る。それは何を求めているのか。</p>
+        </div>
+      </li>
+      <li class="step-item">
+        <span class="step-num">3</span>
+        <div class="step-body">
+          <h3>深海へ潜る</h3>
+          <p>外側の音を遮断し、より深い層へ。ここで初めて、本当の静けさに出会う。</p>
+        </div>
+      </li>
+      <li class="step-item">
+        <span class="step-num">4</span>
+        <div class="step-body">
+          <h3>Echoに耳を澄ます</h3>
+          <p>深海に響く小さな声を、ただ聴く。答えを求めず、ただ受け取る。</p>
+        </div>
+      </li>
+      <li class="step-item">
+        <span class="step-num">5</span>
+        <div class="step-body">
+          <h3>クリスタルに触れる</h3>
+          <p>深海の底に、ずっとあり続けていたもの。それがあなた自身の本音。</p>
+        </div>
+      </li>
+    </ul>
+  </div>
+</section>
+
+<div class="depth-divider"><div class="depth-divider-line"></div></div>
+
+
+<!-- ═══════════════════════════════════════
+     ⑥ BEFORE / AFTER
+═══════════════════════════════════════ -->
+<section id="s-ba" data-depth="0.75">
+  <div class="chapter">
+    <span class="eyebrow">— 変容</span>
+    <h2 class="fade-up">
+      ５日後、<br>
+      あなたは自分の場所を思い出す。
+    </h2>
+    <div class="ba-wrap fade-up">
+      <div class="ba-col before">
+        <span class="ba-col-label">Before</span>
+        <ul class="ba-list">
+          <li>不安になると占いを検索してしまう</li>
+          <li>正しい答えを探し続ける</li>
+          <li>感情を否定してしまう</li>
+          <li>まだ足りないと感じ続ける</li>
+          <li>自分以外になろうとする</li>
+        </ul>
+      </div>
+      <div class="ba-col after">
+        <span class="ba-col-label">After</span>
+        <ul class="ba-list">
+          <li>焦った瞬間にスマホを伏せられる</li>
+          <li>今どう感じているかを聴ける</li>
+          <li>感情を消そうとしなくなる</li>
+          <li>外側の答えへ飛びつかなくなる</li>
+          <li>私はここにいてよかったと思える</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="depth-divider"><div class="depth-divider-line"></div></div>
+
+
+<!-- ═══════════════════════════════════════
+     ⑦ FOR / NOT FOR
+═══════════════════════════════════════ -->
+<section id="s-for" data-depth="0.78">
+  <div class="chapter">
+    <span class="eyebrow">— こんな方へ</span>
+    <h2 class="fade-up">こんな方へ</h2>
+    <div class="fade-up">
+      <ul class="check-list pos">
+        <li>占いや診断を繰り返し続けている</li>
+        <li>夜中の検索がやめられない</li>
+        <li>本音が分からない</li>
+        <li>他人の正しさを優先してしまう</li>
+        <li>もう自分を置き去りにしたくない</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="s-notfor" data-depth="0.80">
+  <div class="chapter">
+    <span class="eyebrow">— 向いていない方</span>
+    <div class="fade-up">
+      <ul class="check-list">
+        <li>占いや診断の「答え」を求めている方</li>
+        <li>5日間の毎日ワークに時間を確保できない方</li>
+        <li>今すぐ具体的な行動プランが必要な方</li>
+      </ul>
+      <p style="margin-top:28px; font-size:0.84rem;">
+        深海Echoは、外側の答えを与えません。<br>
+        あなた自身の感覚を信頼するための旅です。
+      </p>
+    </div>
+  </div>
+</section>
+
+<div class="depth-divider"><div class="depth-divider-line"></div></div>
+
+
+<!-- ═══════════════════════════════════════
+     ⑧ CONTENTS
+═══════════════════════════════════════ -->
+<section id="s-contents" data-depth="0.82">
+  <div class="chapter">
+    <span class="eyebrow">— 深海へ潜るために</span>
+    <ul class="contents-list fade-up">
+      <li class="content-item">
+        <span class="content-icon">◈</span>
+        <div>
+          <h3>感覚探査ワークブック</h3>
+          <p>５日間のステップに沿いながら、内側をやさしく見つめていく。答えではなく、問いとともに潜っていく。</p>
+        </div>
+      </li>
+      <li class="content-item">
+        <span class="content-icon">◈</span>
+        <div>
+          <h3>感覚ナビゲーションマップ</h3>
+          <p>正解へ逃げる浮上反応を止め、心の深度を可視化。本音のクリスタルへ辿り着くための、あなただけの航海図。</p>
+        </div>
+      </li>
+      <li class="content-item">
+        <span class="content-icon">◈</span>
+        <div>
+          <h3>５日間のログシート</h3>
+          <p>自分の内側に起きていることを、ただ静かに書き留めていく。書くことで、感覚はゆっくりと輪郭を帯びていく。</p>
+        </div>
+      </li>
+    </ul>
+    <div class="meta-grid fade-up">
+      <div class="meta-cell">
+        <span class="meta-cell-label">PRICE</span>
+        <div class="meta-cell-val">11,000円（税込）</div>
+      </div>
+      <div class="meta-cell">
+        <span class="meta-cell-label">CAPACITY</span>
+        <div class="meta-cell-val">8名限定</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="depth-divider"><div class="depth-divider-line"></div></div>
+
+
+<!-- ═══════════════════════════════════════
+     ⑨ FAQ
+═══════════════════════════════════════ -->
+<section id="s-faq" data-depth="0.85">
+  <div class="chapter">
+    <span class="eyebrow">— questions</span>
+    <h2 class="fade-up">よくある問い</h2>
+    <div class="fade-up">
+      <div class="faq-item">
+        <p class="faq-q">占いやスピリチュアルが好きですが、参加できますか？</p>
+        <p class="faq-a">はい。深海Echoは占いやスピリチュアルを否定しません。外側への依存ループを外れ、それらを観察のツールとして使えるようになることを目指します。</p>
+      </div>
+      <div class="faq-item">
+        <p class="faq-q">感情を掘り下げることが怖いのですが大丈夫ですか？</p>
+        <p class="faq-a">「正しく感じなければ」という必要はありません。1日5〜10分、ゆっくりしたペースで進めます。</p>
+      </div>
+      <div class="faq-item">
+        <p class="faq-q">スピリチュアルや心理学の知識がなくても大丈夫ですか？</p>
+        <p class="faq-a">前提知識は一切必要ありません。自分の感覚と向き合う習慣を育てることが目的です。</p>
+      </div>
+      <div class="faq-item">
+        <p class="faq-q">どのような形式で届きますか？</p>
+        <p class="faq-a">お申し込み後、PDFログシート・ワークブック・音声ガイドをデジタルでお届けします。</p>
+      </div>
+      <div class="faq-item">
+        <p class="faq-q">返金は可能ですか？</p>
+        <p class="faq-a">デジタルコンテンツの性質上、お届け後の返金はお受けできません。ご了承ください。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="depth-divider"><div class="depth-divider-line"></div></div>
+
+
+<!-- ═══════════════════════════════════════
+     ⑩ PRICE
+═══════════════════════════════════════ -->
+<section id="s-price" data-depth="0.88">
+  <div class="chapter">
+    <span class="eyebrow">— the invitation</span>
+    <h2 class="fade-up">深海へ、潜る準備を。</h2>
+    <div class="price-frame fade-up">
+      <div class="limit-tag">8名限定</div>
+      <div class="price-num">¥11,000</div>
+      <p class="price-note">税込 / デジタルコンテンツ一式</p>
+      <a class="cta-btn" href="https://forms.gle/ay5QZcdGpxdWdDWZ9" target="_blank" rel="noopener">
+        深海へ潜る
+      </a>
+      <p class="cta-sub">
+        静かな海の底で、<br>
+        あなた自身の声を<br>
+        受け取るために。
+      </p>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════
+     ⑪ CLOSING — 最深部（クリスタルだけが光る）
+═══════════════════════════════════════ -->
+<section id="s-closing" data-depth="1.0">
+  <div class="chapter" style="width:100%;">
+    <div class="crystal-orb" aria-hidden="true"></div>
+    <p class="closing-quote fade-up">
+      答えは、<br>
+      もともとあなたの中にありました。<br><br>
+      ただ、その声を聴くための静けさを<br>
+      <span class="crystal-word">少し忘れていただけ。</span><br><br>
+      あなたは最初から、<br>
+      クリスタルを持って生まれてきました。<br><br>
+      それは誰かに与えられるものではなく、<br>
+      あなた自身の感覚と再会した時、<br>
+      <span class="crystal-word">再び光り始めるものです。</span><br><br>
+      あなたの深海へ、<br>
+      潜りに行きませんか。
+    </p>
+    <div class="closing-cta-wrap fade-up">
+      <a class="cta-btn" href="https://forms.gle/ay5QZcdGpxdWdDWZ9" target="_blank" rel="noopener">
+        深海へ潜る
+      </a>
+    </div>
+    <p class="closing-brand">LunaRa Lab — 深海Echo</p>
+  </div>
+</section>
+
+<footer style="position:relative;z-index:1;text-align:center;padding:32px;
+  font-family:'Cormorant Garamond',Georgia,serif;font-size:0.58rem;
+  letter-spacing:0.55em;color:rgba(100,150,190,0.42);">
+  © LunaRa Lab / Hideka_Spirial.Arch
+</footer>
+
+
+<!-- ═══════════════════════════════════════
+     SCRIPTS
+═══════════════════════════════════════ -->
+<script>
+/* ══════════════════════════════════════════
+   DEPTH ENGINE
+   スクロール位置からグローバルdepth(0→1)を計算。
+   depth に応じてcanvasの背景色・光量・粒子を変化させる。
+══════════════════════════════════════════ */
+(function(){
+  const canvas = document.getElementById('depth-canvas');
+  const ctx    = canvas.getContext('2d');
+  let W, H;
+
+  // ── 深度カラーテーブル ──
+  // depth値 → [R, G, B]  （海面=明るく、最深部=ほぼ真っ暗）
+  const depthColors = [
+    { d: 0.00, r: 14,  g: 58,  b: 110 },  // 海面: 明るい青
+    { d: 0.18, r: 10,  g: 46,  b: 88  },  // 浅瀬
+    { d: 0.38, r: 6,   g: 30,  b: 60  },  // 中層
+    { d: 0.60, r: 3,   g: 13,  b: 32  },  // 深海
+    { d: 0.85, r: 1,   g: 6,   b: 16  },  // 最深部手前
+    { d: 1.00, r: 1,   g: 4,   b: 10  },  // 最深部
+  ];
+
+  // ── 光粒子: 深度が浅い=多・明, 深い=少・暗 ──
+  let particles = [];
+  const MAX_PARTICLES = 55;
+
+  function getDepthColor(d) {
+    let lo = depthColors[0], hi = depthColors[depthColors.length - 1];
+    for (let i = 0; i < depthColors.length - 1; i++) {
+      if (d >= depthColors[i].d && d <= depthColors[i+1].d) {
+        lo = depthColors[i]; hi = depthColors[i+1]; break;
+      }
+    }
+    const t = lo.d === hi.d ? 0 : (d - lo.d) / (hi.d - lo.d);
+    return {
+      r: Math.round(lo.r + (hi.r - lo.r) * t),
+      g: Math.round(lo.g + (hi.g - lo.g) * t),
+      b: Math.round(lo.b + (hi.b - lo.b) * t),
+    };
+  }
+
+  function resize() {
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+    canvas.style.width  = W + 'px';
+    canvas.style.height = H + 'px';
+  }
+
+  function initParticles() {
+    particles = [];
+    for (let i = 0; i < MAX_PARTICLES; i++) {
+      particles.push(makeParticle());
+    }
+  }
+
+  function makeParticle(atBottom) {
+    return {
+      x:  Math.random() * W,
+      y:  atBottom ? H + 5 : Math.random() * H,
+      r:  Math.random() * 1.4 + 0.2,
+      vy: -(Math.random() * 0.22 + 0.05),
+      vx: (Math.random() - 0.5) * 0.12,
+      life: Math.random(),
+    };
+  }
+
+  let currentDepth = 0;
+  let targetDepth  = 0;
+
+  // スクロールからdepthを計算
+  function calcDepth() {
+    const scrollY = window.scrollY;
+    const docH    = document.documentElement.scrollHeight - window.innerHeight;
+    return docH > 0 ? Math.min(1, Math.max(0, scrollY / docH)) : 0;
+  }
+
+  // depth から光粒子の「見え方」を決める
+  // depth 0 = 多・明るい（海面の光）
+  // depth 1 = 極少・暗く・ゆっくり（最深部）
+  function particleAlpha(depth) {
+    // 表層は多め・明るめ、深いほど少なく暗く
+    return Math.max(0.03, 0.35 - depth * 0.30);
+  }
+  function activeParticleCount(depth) {
+    return Math.round(MAX_PARTICLES * (1 - depth * 0.72));
+  }
+
+  function draw() {
+    // depth をイージング
+    currentDepth += (targetDepth - currentDepth) * 0.04;
+
+    const c   = getDepthColor(currentDepth);
+    const bgR = c.r, bgG = c.g, bgB = c.b;
+
+    // 背景グラデーション: 上から下へ少し暗く
+    const grd = ctx.createLinearGradient(0, 0, 0, H);
+    grd.addColorStop(0, `rgb(${bgR},${bgG},${bgB})`);
+    grd.addColorStop(1, `rgb(${Math.max(0,bgR-4)},${Math.max(0,bgG-4)},${Math.max(0,bgB-4)})`);
+    ctx.fillStyle = grd;
+    ctx.fillRect(0, 0, W, H);
+
+    // 光柱（海面付近のみ）: depth < 0.35 で薄く光の筋
+    if (currentDepth < 0.45) {
+      const beamAlpha = (0.45 - currentDepth) / 0.45 * 0.08;
+      const beams = [W*0.22, W*0.55, W*0.78];
+      beams.forEach(bx => {
+        const bg2 = ctx.createLinearGradient(bx, 0, bx, H * 0.6);
+        bg2.addColorStop(0,   `rgba(140,200,240,${beamAlpha})`);
+        bg2.addColorStop(1,   `rgba(140,200,240,0)`);
+        ctx.fillStyle = bg2;
+        ctx.beginPath();
+        ctx.moveTo(bx - 18, 0);
+        ctx.lineTo(bx + 18, 0);
+        ctx.lineTo(bx + 6,  H * 0.6);
+        ctx.lineTo(bx - 6,  H * 0.6);
+        ctx.closePath();
+        ctx.fill();
+      });
+    }
+
+    // クリスタル発光（depth > 0.82 で中央底部から光る）
+    if (currentDepth > 0.82) {
+      const glowIntensity = (currentDepth - 0.82) / 0.18;
+      const gx = ctx.createRadialGradient(W/2, H*0.85, 0, W/2, H*0.85, W*0.38);
+      gx.addColorStop(0,   `rgba(91,200,232,${0.12 * glowIntensity})`);
+      gx.addColorStop(0.4, `rgba(60,160,200,${0.05 * glowIntensity})`);
+      gx.addColorStop(1,   `rgba(20,80,130,0)`);
+      ctx.fillStyle = gx;
+      ctx.fillRect(0, 0, W, H);
+    }
+
+    // パーティクル
+    const maxActive = activeParticleCount(currentDepth);
+    const alpha     = particleAlpha(currentDepth);
+
+    for (let i = 0; i < MAX_PARTICLES; i++) {
+      const p = particles[i];
+      if (i >= maxActive) continue; // 深いほど粒子数を削減
+
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(168,220,248,${alpha * (0.5 + p.life * 0.5)})`;
+      ctx.fill();
+
+      p.x += p.vx;
+      p.y += p.vy * (1 - currentDepth * 0.5); // 深いほど遅く
+      p.life -= 0.003;
+
+      if (p.y < -10 || p.life <= 0) {
+        particles[i] = makeParticle(true);
+      }
+    }
+
+    requestAnimationFrame(draw);
+  }
+
+  // scroll → targetDepth
+  window.addEventListener('scroll', () => {
+    targetDepth = calcDepth();
+  }, { passive: true });
+
+  resize();
+  initParticles();
+  draw();
+  window.addEventListener('resize', () => { resize(); initParticles(); });
+})();
+
+
+/* ══════════════════════════════════════════
+   WAVE ANIMATION (hero下部の波)
+══════════════════════════════════════════ */
+(function(){
+  let t = 0;
+  const wave1El = document.getElementById('wave1');
+  const wave2El = document.getElementById('wave2');
+  const wave3El = document.getElementById('wave3');
+  if (!wave1El) return;
+
+  function makeWavePath(phase, amp, yBase, segments) {
+    const W = 660;
+    let d = `M0,${yBase}`;
+    for (let i = 0; i <= segments; i++) {
+      const x = (i / segments) * W;
+      const y = yBase + Math.sin(i / segments * Math.PI * 3 + phase) * amp
+                      + Math.sin(i / segments * Math.PI * 5 + phase * 1.3) * (amp * 0.4);
+      d += ` L${x.toFixed(1)},${y.toFixed(1)}`;
+    }
+    d += ` L${W},120 L0,120 Z`;
+    return d;
+  }
+
+  function animWave() {
+    t += 0.018;
+    if (wave1El) wave1El.setAttribute('d', makeWavePath(t,          12, 55, 40));
+    if (wave2El) wave2El.setAttribute('d', makeWavePath(t + 1.2,    8,  68, 40));
+    if (wave3El) wave3El.setAttribute('d', makeWavePath(t + 2.4,    5,  80, 40));
+    requestAnimationFrame(animWave);
+  }
+  animWave();
+})();
+
+
+/* ══════════════════════════════════════════
+   EMOTION WAVE ANIMATION (world vis)
+══════════════════════════════════════════ */
+(function(){
+  let t = 0;
+  const ew = document.getElementById('emo-wave');
+  const ewb = document.getElementById('emo-wave-bg');
+  if (!ew) return;
+
+  function emoPath(phase, yBase, amp) {
+    const W = 560;
+    const segs = 30;
+    let d = `M0,${yBase}`;
+    for (let i = 1; i <= segs; i++) {
+      const x = (i / segs) * W;
+      const y = yBase
+        + Math.sin(i / segs * Math.PI * 2.5 + phase) * amp
+        + Math.sin(i / segs * Math.PI * 4.2 + phase * 1.6) * (amp * 0.35);
+      d += ` L${x.toFixed(1)},${y.toFixed(1)}`;
+    }
+    return d;
+  }
+
+  function animEmo() {
+    t += 0.022;
+    const stroke = emoPath(t, 42, 18);
+    if (ew)  ew.setAttribute('d',  stroke);
+    if (ewb) ewb.setAttribute('d', stroke + ' L560,80 L0,80 Z');
+    requestAnimationFrame(animEmo);
+  }
+  animEmo();
+})();
+
+
+/* ══════════════════════════════════════════
+   INTERSECTION OBSERVER (fade-up / steps)
+══════════════════════════════════════════ */
+(function(){
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        io.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.12 });
+
+  document.querySelectorAll('.fade-up').forEach(el => io.observe(el));
+  document.querySelectorAll('.vis-block').forEach(el => io.observe(el));
+
+  // Steps stagger
+  const stepIo = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.querySelectorAll('.step-item').forEach((item, i) => {
+          setTimeout(() => item.classList.add('visible'), i * 130);
+        });
+        stepIo.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.05 });
+  const sl = document.querySelector('.step-list');
+  if (sl) stepIo.observe(sl);
+})();
+
+</script>
+</body>
+</html>
